@@ -1,0 +1,89 @@
+﻿AppType=JavaFX
+Build1=Default,b4j.example
+File1=Layout1.bjl
+File2=TransparencyRemover.bjl
+FileGroup1=Default Group
+FileGroup2=Default Group
+Group=Default Group
+Library1=jcore
+Library2=jfx
+Library3=jxui
+Library4=jbitmapcreator
+Module1=TransparencyRemover
+NumberOfFiles=2
+NumberOfLibraries=4
+NumberOfModules=1
+Version=8.9
+@EndOfDesignText@
+#Region Project Attributes 
+	#MainFormWidth: 600
+	#MainFormHeight: 600 
+#End Region
+
+Sub Process_Globals
+	Private fx As JFX
+	Private MainForm As Form
+	Private xui As XUI 
+	Private Button1 As B4XView
+	Private ImageView1 As ImageView
+End Sub
+
+Sub AppStart (Form1 As Form, Args() As String)
+	MainForm = Form1
+	MainForm.RootPane.LoadLayout("Layout1")
+	MainForm.Show
+	ImageView1.SetImage(fx.LoadImage(File.DirApp,"透明图片.png"))
+End Sub
+
+
+Sub Button1_Click
+	Dim files As List = Array(File.Combine(File.DirApp,"透明图片.png"))
+	Dim remover As TransparencyRemover
+	remover.Initialize(files)
+	remover.show
+End Sub
+
+
+Sub Button2_Click
+	Dim img As Image = ImageView1.GetImage
+	Dim rect As B4XRect
+	rect.Initialize(0,0,img.Width,img.Height)
+	Dim bc As BitmapCreator
+	bc.Initialize(img.Width,img.Height)
+	bc.DrawBitmap(img,rect,False)
+	For x = 0 To img.Width - 1
+		For y = 0 To img.Height - 1
+			Dim color As ARGBColor
+			bc.GetARGB(x,y,color)
+			If color.a = 0 Then
+				color.a = 255
+				color.r = 255
+				color.g = 255
+				color.b = 255
+			End If
+			bc.SetARGB(x,y,color)
+		Next
+	Next
+	ImageView1.SetImage(bc.Bitmap)
+	File.WriteBytes(File.DirApp,"out.jpg",ImageToBytes(bc.Bitmap))
+	'Dim bytes() As Byte = ImageToBytes(img)
+	'ImageView1.SetImage(BytesToImage(bytes))
+	'File.WriteBytes(File.DirApp,"out.jpg",bytes)
+End Sub
+
+Public Sub ImageToBytes(Image As B4XBitmap) As Byte()
+	Dim out As OutputStream
+	out.InitializeToBytesArray(0)
+	Image.WriteToStream(out, 100, "JPEG")
+	out.Close
+	Return out.ToBytesArray
+End Sub
+
+Public Sub BytesToImage(bytes() As Byte) As Image
+	Dim In As InputStream
+	In.InitializeFromBytesArray(bytes, 0, bytes.Length)
+	Dim bmp As Image
+	bmp.Initialize2(In)
+	In.Close
+	Return bmp
+End Sub
